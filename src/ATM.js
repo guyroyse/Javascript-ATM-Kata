@@ -1,4 +1,7 @@
 var atm = (function() {
+
+	var balance = 100;
+	
 	var validatePin = function(pin) {
 		return (pin == '1234');
 	};
@@ -14,8 +17,12 @@ var atm = (function() {
 	return {
 		withdraw: function(amount, accountNumber, pin) {
 			if (!validateCredentials(accountNumber, pin)) amount = 0;
-			if (amount > this.balance) amount = 0;
+			if (amount > balance) amount = 0;
+			balance -= amount;
 			return amount;
+		},
+		getBalance: function() {
+			return balance;
 		}
 	};
 })();
@@ -34,7 +41,7 @@ var view = {
 		$('#cashDrawer').val(amount);		
 	},
 	setBalance: function(amount) {
-		$('#accountBalance').val(amount);		
+		$('#accountBalance').text(amount);		
 	}
 };
 
@@ -42,5 +49,6 @@ $(function() {
 	$('input#withdraw').click(function() {
 		var amountWithdrawn = atm.withdraw(view.getAmount(), view.getAccountNumber(), view.getPin());
 		view.setCashDrawer(amountWithdrawn);
+		view.setBalance(atm.getBalance());
 	});
 });

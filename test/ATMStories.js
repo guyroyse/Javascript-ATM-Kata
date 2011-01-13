@@ -1,9 +1,5 @@
 describe("ATM Story Tests", function(){
-    beforeEach(function() {
-        // Put however you reset everything in here.
-        // This should reset Judy's account balance too.
-    	atm.balance = 100;
-    });
+    beforeEach(function() {});
     it("Allows Judy to withdraw money when she has a balance available", function() {
         $('input#accountNumber').val('1234567890');
         $('input#PIN').val('1234');
@@ -28,7 +24,7 @@ describe("ATM Story Tests", function(){
     it("Prevents Judy from withdrawing money when she puts in an incorrect account number", function() {
         $('input#accountNumber').val('0987654321');
         $('input#PIN').val('1234');
-        $('input#amount').val('25');
+        $('input#amount').val(25);
         $('input#withdraw').click();
         expect($('#cashDrawer').val()).toEqual('0');
    });
