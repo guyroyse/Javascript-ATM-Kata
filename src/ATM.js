@@ -1,28 +1,56 @@
+var accounts = (function() {
+	var db = proton.db('accounts');
+	return {
+		addAccount: function(account) {
+			db.save(account);
+		}, 
+		getAccount: function(accountNumber) {
+			return db.find({ number: accountNumber }).first();
+		},
+		updateAccount: function(account) {
+			db.update({ number: account.number }, account);
+		}
+	};
+})();
+
 var atm = (function() {
 
-	var balance = 100;
-	
-	var validatePin = function(pin) {
-		return (pin == '1234');
+	var updateBalance = function(accountNumber, balance) {
+		var account = accounts.getAccount(accountNumber);
+		account.balance = balance;
+		accounts.updateAccount(account);
 	};
 	
-	var validateAccountNumber = function(accountNumber) {
-		return (accountNumber == '1234567890');
+	var balanceIsSufficient = function(amount, balance) {
+		return amount <= balance;
 	};
 	
-	var validateCredentials = function(accountNumber, pin) {
-		return validatePin(pin) && validateAccountNumber(accountNumber);
-	}
+	var validCredentials = function(accountNumber, pin) {
+		var account = accounts.getAccount(accountNumber);
+		return account && pin == account.pin;
+	};
+	
+	var getBalance = function(accountNumber) {
+		var account = accounts.getAccount(accountNumber);
+		return account ? account.balance : undefined;
+	};
+	
+	var createDefaultWithdrawal = function(accountNumber) {
+		return { 
+			amount: 0, 
+			balance: getBalance(accountNumber) 
+		};
+	};
 	
 	return {
 		withdraw: function(amount, accountNumber, pin) {
-			if (!validateCredentials(accountNumber, pin)) amount = 0;
-			if (amount > balance) amount = 0;
-			balance -= amount;
-			return amount;
-		},
-		getBalance: function() {
-			return balance;
+			var withdrawal = createDefaultWithdrawal(accountNumber);
+			if (validCredentials(accountNumber, pin) && balanceIsSufficient(amount, withdrawal.balance)) {
+				withdrawal.balance -= amount;
+				withdrawal.amount = amount;
+				updateBalance(accountNumber, withdrawal.balance);
+			}
+			return withdrawal;
 		}
 	};
 })();
@@ -47,8 +75,8 @@ var view = {
 
 $(function() {
 	$('input#withdraw').click(function() {
-		var amountWithdrawn = atm.withdraw(view.getAmount(), view.getAccountNumber(), view.getPin());
-		view.setCashDrawer(amountWithdrawn);
-		view.setBalance(atm.getBalance());
+		var withdrawal = atm.withdraw(view.getAmount(), view.getAccountNumber(), view.getPin());
+		view.setCashDrawer(withdrawal.amount);
+		view.setBalance(withdrawal.balance);
 	});
 });
